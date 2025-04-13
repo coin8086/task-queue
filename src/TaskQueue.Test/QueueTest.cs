@@ -1,6 +1,4 @@
-﻿using Rz.TaskQueue;
-
-namespace TaskQueue.Test;
+﻿namespace Rz.TaskQueue.Test;
 
 public class QueueTest
 {
