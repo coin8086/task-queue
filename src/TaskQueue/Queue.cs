@@ -1,13 +1,34 @@
-﻿namespace Rz.TaskQueue;
+﻿using Microsoft.EntityFrameworkCore;
 
-internal class Queue : IQueue
+namespace Rz.TaskQueue;
+
+public class Queue : IQueue
 {
-    public void Enqueue(string messsage, int? lease = null)
+    public Queue(IDbContextFactory<PsqlContext> psqlContextFactory, string name, int messageLease = 60)
     {
         throw new NotImplementedException();
     }
 
-    public IQueueMessage? Dequeue()
+    public string Name => throw new NotImplementedException();
+
+    public int MessageLease => throw new NotImplementedException();
+
+    public void Create()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Delete()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void PutMessage(string messsage, int? lease = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public IQueueMessage? GetMessage()
     {
         throw new NotImplementedException();
     }

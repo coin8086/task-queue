@@ -2,17 +2,17 @@ namespace Rz.TaskQueue;
 
 public interface IQueueMessage
 {
-    public int Id { get; }
+    int Id { get; }
 
-    public string Receipt { get; }
+    string Receipt { get; }
 
-    public string Queue { get; }
+    string Queue { get; }
 
-    public string Content { get; }
+    string Content { get; }
 
-    public int RequeueCount { get; }
+    int RequeueCount { get; }
 
-    public DateTimeOffset CreatedAt { get; }
+    DateTimeOffset CreatedAt { get; }
 
-    public DateTimeOffset LeaseExpiredAt { get; }
+    DateTimeOffset LeaseExpiredAt { get; }
 }
