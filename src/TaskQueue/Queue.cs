@@ -23,12 +23,12 @@ public class Queue : IQueue
         throw new NotImplementedException();
     }
 
-    public void PutMessage(string messsage, int? lease = null)
+    public void PutMessage(string messsage)
     {
         throw new NotImplementedException();
     }
 
-    public IQueueMessage? GetMessage()
+    public IQueueMessage? GetMessage(int? lease = null)
     {
         throw new NotImplementedException();
     }
