@@ -4,14 +4,22 @@ namespace Rz.TaskQueue;
 
 public class Queue : IQueue
 {
+    private readonly IDbContextFactory<PsqlContext> _dbContextFactory;
+
+    private readonly string _name;
+
+    private readonly int _messageLease;
+
     public Queue(IDbContextFactory<PsqlContext> psqlContextFactory, string name, int messageLease = 60)
     {
-        throw new NotImplementedException();
+        _dbContextFactory = psqlContextFactory;
+        _name = name;
+        _messageLease = messageLease;
     }
 
-    public string Name => throw new NotImplementedException();
+    public string Name => _name;
 
-    public int MessageLease => throw new NotImplementedException();
+    public int MessageLease => _messageLease;
 
     public void Create()
     {
