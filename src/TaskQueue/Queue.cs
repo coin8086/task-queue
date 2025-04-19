@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace Rz.TaskQueue;
 
@@ -33,7 +33,7 @@ public class Queue : IQueue
         throw new NotImplementedException();
     }
 
-    public void ExtendMessageLease(int messageId, string receipt, int lease)
+    public void ExtendMessageLease(int messageId, string receipt, int? lease = null)
     {
         throw new NotImplementedException();
     }

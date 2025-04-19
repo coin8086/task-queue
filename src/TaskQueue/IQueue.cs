@@ -26,7 +26,8 @@ public interface IQueue
     public IQueueMessage? GetMessage();
 
     //Extend the message lease time in seconds.
-    void ExtendMessageLease(int messageId, string receipt, int lease);
+    //When lease is null, the default lease on queue will be used.
+    void ExtendMessageLease(int messageId, string receipt, int? lease = null);
 
     //Delete the message from the queue when it has been processed.
     void DeleteMessage(int messageId, string receipt);
