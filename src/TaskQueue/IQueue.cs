@@ -9,13 +9,13 @@ public interface IQueue
     int MessageLease { get; }
 
     //Create the queue only if it doesn't exist.
-    void Create();
+    Task CreateAsync();
 
     //Delete the queue only if it exists.
-    void Delete();
+    Task DeleteAsync();
 
     //Put a message at the end of the queue.
-    void PutMessage(string messsage);
+    Task PutMessageAsync(string messsage);
 
     //Get a messsage from the front of the queue, with an optional lease that overrides the default lease on the queue.
     //Return null if no message available.
@@ -23,15 +23,15 @@ public interface IQueue
     //another call to this method. When a returned messsage has been processed, it must be deleted from the queue
     //by the DeleteMessage method. When a returned message cannot be processed, it can be deleted or returned back
     //to the queue by the ReturnMessage method.
-    public IQueueMessage? GetMessage(int? lease = null);
+    Task<IQueueMessage?> GetMessageAsync(int? lease = null);
 
     //Extend the message lease time in seconds.
     //When lease is null, the default lease on queue will be used.
-    void ExtendMessageLease(int messageId, string receipt, int? lease = null);
+    Task ExtendMessageLeaseAsync(int messageId, string receipt, int? lease = null);
 
     //Delete the message from the queue when it has been processed.
-    void DeleteMessage(int messageId, string receipt);
+    Task DeleteMessageAsync(int messageId, string receipt);
 
     //Return the message back to the queue when it cannot be processed.
-    void ReturnMessage(int messageId, string receipt);
+    Task ReturnMessageAsync(int messageId, string receipt);
 }

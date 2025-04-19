@@ -21,37 +21,37 @@ public class Queue : IQueue
 
     public int MessageLease => _messageLease;
 
-    public void Create()
+    public Task CreateAsync()
     {
         throw new NotImplementedException();
     }
 
-    public void Delete()
+    public Task DeleteAsync()
     {
         throw new NotImplementedException();
     }
 
-    public void PutMessage(string messsage)
+    public Task PutMessageAsync(string messsage)
     {
         throw new NotImplementedException();
     }
 
-    public IQueueMessage? GetMessage(int? lease = null)
+    public Task<IQueueMessage?> GetMessageAsync(int? lease = null)
     {
         throw new NotImplementedException();
     }
 
-    public void ExtendMessageLease(int messageId, string receipt, int? lease = null)
+    public Task ExtendMessageLeaseAsync(int messageId, string receipt, int? lease = null)
     {
         throw new NotImplementedException();
     }
 
-    public void DeleteMessage(int messageId, string receipt)
+    public Task DeleteMessageAsync(int messageId, string receipt)
     {
         throw new NotImplementedException();
     }
 
-    public void ReturnMessage(int messageId, string receipt)
+    public Task ReturnMessageAsync(int messageId, string receipt)
     {
         throw new NotImplementedException();
     }

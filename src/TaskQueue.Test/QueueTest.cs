@@ -12,14 +12,14 @@ public class QueueTest
     {
         var dbContextFactory = new PsqlContextFactory("connection string");
         IQueue queue = new Queue(dbContextFactory, RandomQueueName, DefaultMessageLease);
-        queue.Create();
+        await queue.CreateAsync();
         try
         {
-            await test(queue).ConfigureAwait(false);
+            await test(queue);
         }
         finally
         {
-            queue.Delete();
+            await queue.DeleteAsync();
         }
     }
 
@@ -30,65 +30,65 @@ public class QueueTest
     }
 
     [Fact]
-    public void TestCreateAndDeleteQueue()
+    public async Task TestCreateAndDeleteQueue()
     {
         var dbContextFactory = new PsqlContextFactory("connection string");
         IQueue queue = new Queue(dbContextFactory, RandomQueueName, DefaultMessageLease);
 
-        queue.Create();
+        await queue.CreateAsync();
         try
         {
             var messages = new string[] { "1", "2", "3" };
             foreach (var message in messages)
             {
-                queue.PutMessage(message);
+                await queue.PutMessageAsync(message);
             }
 
-            var msg = queue.GetMessage();
+            var msg = await queue.GetMessageAsync();
             Assert.NotNull(msg);
 
-            queue.Delete();
+            await queue.DeleteAsync();
 
             //After queue is deleted, no message can be retrieved from it.
-            var msg2 = queue.GetMessage();
+            var msg2 = await queue.GetMessageAsync();
             Assert.Null(msg2);
 
             //And any operations on the retrieved msg should fail.
-            Assert.Throws<Exception>(() =>
+            await Assert.ThrowsAsync<Exception>(() =>
             {
-                queue.ExtendMessageLease(msg.Id, msg.Receipt, queue.MessageLease);
+                return queue.ExtendMessageLeaseAsync(msg.Id, msg.Receipt, queue.MessageLease);
             });
 
-            Assert.Throws<Exception>(() =>
+            await Assert.ThrowsAsync<Exception>(() =>
             {
-                queue.ReturnMessage(msg.Id, msg.Receipt);
+                return queue.ReturnMessageAsync(msg.Id, msg.Receipt);
             });
 
-            Assert.Throws<Exception>(() =>
+            await Assert.ThrowsAsync<Exception>(() =>
             {
-                queue.DeleteMessage(msg.Id, msg.Receipt);
+                return queue.DeleteMessageAsync(msg.Id, msg.Receipt);
             });
         }
         finally
         {
-            queue.Delete();
+            await queue.DeleteAsync();
         }
     }
 
     [Fact]
     public async Task TestEnqueueAndDequeue()
     {
-        await TestQueueAsync(queue =>
+        await TestQueueAsync(async queue =>
         {
             var messages = new string[] { "1", "2", "3" };
             foreach (var message in messages)
             {
-                queue.PutMessage(message);
+                await queue.PutMessageAsync(message);
             }
 
             for (var i = 0; i < messages.Length; i++)
             {
-                var msg = queue.GetMessage();
+                var msg = await queue.GetMessageAsync();
                 Assert.NotNull(msg);
                 Assert.Equal(queue.Name, msg.Queue);
                 Assert.Equal(messages[i], msg.Content);
@@ -97,10 +97,8 @@ public class QueueTest
             }
 
             //When no visible/available message in queue, null is returned.
-            var msg2 = queue.GetMessage();
+            var msg2 = queue.GetMessageAsync();
             Assert.Null(msg2);
-
-            return Task.CompletedTask;
         });
     }
 
@@ -111,21 +109,21 @@ public class QueueTest
         {
             var msgContent = "abc";
             var lease = 2;
-            queue.PutMessage(msgContent);
+            await queue.PutMessageAsync(msgContent);
 
-            var msg = queue.GetMessage(lease);
+            var msg = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg);
             Assert.Equal(msgContent, msg.Content);
             AssertMessageLease(lease, msg.LeaseExpiredAt);
 
-            var msg2 = queue.GetMessage(lease);
+            var msg2 = await queue.GetMessageAsync(lease);
             Assert.Null(msg2);
 
             //Pass half timeLeft of lease
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The lease of msg is not expired.
-            msg2 = queue.GetMessage(lease);
+            msg2 = await queue.GetMessageAsync(lease);
             Assert.Null(msg2);
 
             //Pass another half timeLeft of lease
@@ -133,7 +131,7 @@ public class QueueTest
 
             //The lease of msg is expired.
             //The the same message is available in queue again.
-            msg2 = queue.GetMessage(lease);
+            msg2 = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg2);
             Assert.Equal(msg.Id, msg2.Id);
             Assert.NotEqual(msg.Receipt, msg2.Receipt);
@@ -148,37 +146,37 @@ public class QueueTest
         {
             var msgContent = "abc";
             var lease = 2;
-            queue.PutMessage(msgContent);
+            await queue.PutMessageAsync(msgContent);
 
-            var msg = queue.GetMessage(lease);
+            var msg = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg);
             Assert.Equal(msgContent, msg.Content);
             AssertMessageLease(lease, msg.LeaseExpiredAt);
 
-            var msg2 = queue.GetMessage(lease);
+            var msg2 = await queue.GetMessageAsync(lease);
             Assert.Null(msg2);
 
             //Pass half timeLeft of lease
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The lease of msg is not expired.
-            msg2 = queue.GetMessage(lease);
+            msg2 = await queue.GetMessageAsync(lease);
             Assert.Null(msg2);
 
-            queue.ExtendMessageLease(msg.Id, msg.Receipt, lease);
+            await queue.ExtendMessageLeaseAsync(msg.Id, msg.Receipt, lease);
 
             //Pass another half timeLeft of lease
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The extended lease of msg is not expired.
-            msg2 = queue.GetMessage(lease);
+            msg2 = await queue.GetMessageAsync(lease);
             Assert.Null(msg2);
 
             //Pass a third half timeLeft of lease
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The extended lease of msg is expired.
-            msg2 = queue.GetMessage(lease);
+            msg2 = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg2);
             Assert.Equal(msg.Id, msg2.Id);
             Assert.NotEqual(msg.Receipt, msg2.Receipt);
@@ -193,34 +191,34 @@ public class QueueTest
         {
             var msgContent = "abc";
             var lease = 2;
-            queue.PutMessage(msgContent);
+            await queue.PutMessageAsync(msgContent);
 
-            var msg = queue.GetMessage(lease);
+            var msg = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg);
             Assert.Equal(msgContent, msg.Content);
             AssertMessageLease(lease, msg.LeaseExpiredAt);
 
-            var msg2 = queue.GetMessage(lease);
+            var msg2 = await queue.GetMessageAsync(lease);
             Assert.Null(msg2);
 
             //Pass half timeLeft of lease
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The lease of msg is not expired.
-            msg2 = queue.GetMessage(lease);
+            msg2 = await queue.GetMessageAsync(lease);
             Assert.Null(msg2);
 
             //Pass another half timeLeft of lease
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The lease of msg is expired.
-            Assert.Throws<Exception>(() =>
+            await Assert.ThrowsAsync<Exception>(() =>
             {
-                queue.ExtendMessageLease(msg.Id, msg.Receipt, lease);
+                return queue.ExtendMessageLeaseAsync(msg.Id, msg.Receipt, lease);
             });
 
             //The the same message is available in queue again.
-            msg2 = queue.GetMessage(lease);
+            msg2 = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg2);
             Assert.Equal(msg.Id, msg2.Id);
             Assert.NotEqual(msg.Receipt, msg2.Receipt);
@@ -235,30 +233,30 @@ public class QueueTest
         {
             var msgContent = "abc";
             var lease = 2;
-            queue.PutMessage(msgContent);
+            await queue.PutMessageAsync(msgContent);
 
-            var msg = queue.GetMessage(lease);
+            var msg = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg);
             Assert.Equal(msgContent, msg.Content);
             AssertMessageLease(lease, msg.LeaseExpiredAt);
 
-            var msg2 = queue.GetMessage(lease);
+            var msg2 = await queue.GetMessageAsync(lease);
             Assert.Null(msg2);
 
             //Pass half timeLeft of lease
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The lease of msg is not expired.
-            msg2 = queue.GetMessage(lease);
+            msg2 = await queue.GetMessageAsync(lease);
             Assert.Null(msg2);
 
-            queue.DeleteMessage(msg.Id, msg.Receipt);
+            await queue.DeleteMessageAsync(msg.Id, msg.Receipt);
 
             //Pass another half timeLeft of lease
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //No more message in the queue.
-            msg2 = queue.GetMessage(lease);
+            msg2 = await queue.GetMessageAsync(lease);
             Assert.Null(msg2);
         });
     }
@@ -270,34 +268,34 @@ public class QueueTest
         {
             var msgContent = "abc";
             var lease = 2;
-            queue.PutMessage(msgContent);
+            await queue.PutMessageAsync(msgContent);
 
-            var msg = queue.GetMessage(lease);
+            var msg = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg);
             Assert.Equal(msgContent, msg.Content);
             AssertMessageLease(lease, msg.LeaseExpiredAt);
 
-            var msg2 = queue.GetMessage(lease);
+            var msg2 = await queue.GetMessageAsync(lease);
             Assert.Null(msg2);
 
             //Pass half timeLeft of lease
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The lease of msg is not expired.
-            msg2 = queue.GetMessage(lease);
+            msg2 = await queue.GetMessageAsync(lease);
             Assert.Null(msg2);
 
             //Pass another half timeLeft of lease
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The lease of msg is expired.
-            Assert.Throws<Exception>(() =>
+            await Assert.ThrowsAsync<Exception>(() =>
             {
-                queue.DeleteMessage(msg.Id, msg.Receipt);
+                return queue.DeleteMessageAsync(msg.Id, msg.Receipt);
             });
 
             //The the same message is available in queue again.
-            msg2 = queue.GetMessage(lease);
+            msg2 = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg2);
             Assert.Equal(msg.Id, msg2.Id);
             Assert.NotEqual(msg.Receipt, msg2.Receipt);
@@ -312,27 +310,27 @@ public class QueueTest
         {
             var msgContent = "abc";
             var lease = 2;
-            queue.PutMessage(msgContent);
+            await queue.PutMessageAsync(msgContent);
 
-            var msg = queue.GetMessage();
+            var msg = await queue.GetMessageAsync();
             Assert.NotNull(msg);
             Assert.Equal(msgContent, msg.Content);
             AssertMessageLease(lease, msg.LeaseExpiredAt);
 
-            var msg2 = queue.GetMessage(lease);
+            var msg2 = await queue.GetMessageAsync(lease);
             Assert.Null(msg2);
 
             //Pass half timeLeft of lease
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The lease of msg is not expired.
-            msg2 = queue.GetMessage(lease);
+            msg2 = await queue.GetMessageAsync(lease);
             Assert.Null(msg2);
 
-            queue.ReturnMessage(msg.Id, msg.Receipt);
+            await queue.ReturnMessageAsync(msg.Id, msg.Receipt);
 
             //The the same message is available in queue again.
-            msg2 = queue.GetMessage(lease);
+            msg2 = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg2);
             Assert.Equal(msg.Id, msg2.Id);
             Assert.NotEqual(msg.Receipt, msg2.Receipt);
@@ -347,34 +345,34 @@ public class QueueTest
         {
             var msgContent = "abc";
             var lease = 2;
-            queue.PutMessage(msgContent);
+            await queue.PutMessageAsync(msgContent);
 
-            var msg = queue.GetMessage(lease);
+            var msg = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg);
             Assert.Equal(msgContent, msg.Content);
             AssertMessageLease(lease, msg.LeaseExpiredAt);
 
-            var msg2 = queue.GetMessage(lease);
+            var msg2 = await queue.GetMessageAsync(lease);
             Assert.Null(msg2);
 
             //Pass half timeLeft of lease
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The lease of msg is not expired.
-            msg2 = queue.GetMessage(lease);
+            msg2 = await queue.GetMessageAsync(lease);
             Assert.Null(msg2);
 
             //Pass another half timeLeft of lease
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The lease of msg is expired.
-            Assert.Throws<Exception>(() =>
+            await Assert.ThrowsAsync<Exception>(() =>
             {
-                queue.ReturnMessage(msg.Id, msg.Receipt);
+                return queue.ReturnMessageAsync(msg.Id, msg.Receipt);
             });
 
             //The the same message is available in queue again.
-            msg2 = queue.GetMessage(lease);
+            msg2 = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg2);
             Assert.Equal(msg.Id, msg2.Id);
             Assert.NotEqual(msg.Receipt, msg2.Receipt);
