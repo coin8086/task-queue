@@ -33,4 +33,7 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="TestSettings.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

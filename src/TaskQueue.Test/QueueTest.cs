@@ -58,17 +58,17 @@ public class QueueTest : DbTest
             Assert.Null(msg2);
 
             //And any operations on the retrieved msg should fail.
-            await Assert.ThrowsAsync<Exception>(() =>
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
             {
                 return queue.ExtendMessageLeaseAsync(msg.Id, msg.Receipt, queue.MessageLease);
             });
 
-            await Assert.ThrowsAsync<Exception>(() =>
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
             {
                 return queue.ReturnMessageAsync(msg.Id, msg.Receipt);
             });
 
-            await Assert.ThrowsAsync<Exception>(() =>
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
             {
                 return queue.DeleteMessageAsync(msg.Id, msg.Receipt);
             });
@@ -101,7 +101,7 @@ public class QueueTest : DbTest
             }
 
             //When no visible/available message in queue, null is returned.
-            var msg2 = queue.GetMessageAsync();
+            var msg2 = await queue.GetMessageAsync();
             Assert.Null(msg2);
         });
     }
@@ -118,6 +118,7 @@ public class QueueTest : DbTest
             var msg = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg);
             Assert.Equal(msgContent, msg.Content);
+            Assert.Equal(0, msg.RequeueCount);
             AssertMessageLease(lease, msg.LeaseExpiredAt);
 
             var msg2 = await queue.GetMessageAsync(lease);
@@ -139,6 +140,7 @@ public class QueueTest : DbTest
             Assert.NotNull(msg2);
             Assert.Equal(msg.Id, msg2.Id);
             Assert.NotEqual(msg.Receipt, msg2.Receipt);
+            Assert.Equal(1, msg2.RequeueCount);
             AssertMessageLease(lease, msg2.LeaseExpiredAt);
         });
     }
@@ -155,6 +157,7 @@ public class QueueTest : DbTest
             var msg = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg);
             Assert.Equal(msgContent, msg.Content);
+            Assert.Equal(0, msg.RequeueCount);
             AssertMessageLease(lease, msg.LeaseExpiredAt);
 
             var msg2 = await queue.GetMessageAsync(lease);
@@ -179,11 +182,19 @@ public class QueueTest : DbTest
             //Pass a third half timeLeft of lease
             await Task.Delay((int)(lease / 2.0 * 1000));
 
+            //The extended lease of msg is not expired.
+            msg2 = await queue.GetMessageAsync(lease);
+            Assert.Null(msg2);
+
+            //Pass a forth half timeLeft of lease
+            await Task.Delay((int)(lease / 2.0 * 1000));
+
             //The extended lease of msg is expired.
             msg2 = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg2);
             Assert.Equal(msg.Id, msg2.Id);
             Assert.NotEqual(msg.Receipt, msg2.Receipt);
+            Assert.Equal(1, msg2.RequeueCount);
             AssertMessageLease(lease, msg2.LeaseExpiredAt);
         });
     }
@@ -200,6 +211,7 @@ public class QueueTest : DbTest
             var msg = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg);
             Assert.Equal(msgContent, msg.Content);
+            Assert.Equal(0, msg.RequeueCount);
             AssertMessageLease(lease, msg.LeaseExpiredAt);
 
             var msg2 = await queue.GetMessageAsync(lease);
@@ -216,7 +228,7 @@ public class QueueTest : DbTest
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The lease of msg is expired.
-            await Assert.ThrowsAsync<Exception>(() =>
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
             {
                 return queue.ExtendMessageLeaseAsync(msg.Id, msg.Receipt, lease);
             });
@@ -226,6 +238,7 @@ public class QueueTest : DbTest
             Assert.NotNull(msg2);
             Assert.Equal(msg.Id, msg2.Id);
             Assert.NotEqual(msg.Receipt, msg2.Receipt);
+            Assert.Equal(1, msg2.RequeueCount);
             AssertMessageLease(lease, msg2.LeaseExpiredAt);
         });
     }
@@ -242,6 +255,7 @@ public class QueueTest : DbTest
             var msg = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg);
             Assert.Equal(msgContent, msg.Content);
+            Assert.Equal(0, msg.RequeueCount);
             AssertMessageLease(lease, msg.LeaseExpiredAt);
 
             var msg2 = await queue.GetMessageAsync(lease);
@@ -277,6 +291,7 @@ public class QueueTest : DbTest
             var msg = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg);
             Assert.Equal(msgContent, msg.Content);
+            Assert.Equal(0, msg.RequeueCount);
             AssertMessageLease(lease, msg.LeaseExpiredAt);
 
             var msg2 = await queue.GetMessageAsync(lease);
@@ -293,7 +308,7 @@ public class QueueTest : DbTest
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The lease of msg is expired.
-            await Assert.ThrowsAsync<Exception>(() =>
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
             {
                 return queue.DeleteMessageAsync(msg.Id, msg.Receipt);
             });
@@ -303,6 +318,7 @@ public class QueueTest : DbTest
             Assert.NotNull(msg2);
             Assert.Equal(msg.Id, msg2.Id);
             Assert.NotEqual(msg.Receipt, msg2.Receipt);
+            Assert.Equal(1, msg2.RequeueCount);
             AssertMessageLease(lease, msg2.LeaseExpiredAt);
         });
     }
@@ -316,9 +332,10 @@ public class QueueTest : DbTest
             var lease = 2;
             await queue.PutMessageAsync(msgContent);
 
-            var msg = await queue.GetMessageAsync();
+            var msg = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg);
             Assert.Equal(msgContent, msg.Content);
+            Assert.Equal(0, msg.RequeueCount);
             AssertMessageLease(lease, msg.LeaseExpiredAt);
 
             var msg2 = await queue.GetMessageAsync(lease);
@@ -338,6 +355,7 @@ public class QueueTest : DbTest
             Assert.NotNull(msg2);
             Assert.Equal(msg.Id, msg2.Id);
             Assert.NotEqual(msg.Receipt, msg2.Receipt);
+            Assert.Equal(1, msg2.RequeueCount);
             AssertMessageLease(lease, msg2.LeaseExpiredAt);
         });
     }
@@ -354,6 +372,7 @@ public class QueueTest : DbTest
             var msg = await queue.GetMessageAsync(lease);
             Assert.NotNull(msg);
             Assert.Equal(msgContent, msg.Content);
+            Assert.Equal(0, msg.RequeueCount);
             AssertMessageLease(lease, msg.LeaseExpiredAt);
 
             var msg2 = await queue.GetMessageAsync(lease);
@@ -370,7 +389,7 @@ public class QueueTest : DbTest
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The lease of msg is expired.
-            await Assert.ThrowsAsync<Exception>(() =>
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
             {
                 return queue.ReturnMessageAsync(msg.Id, msg.Receipt);
             });
@@ -380,6 +399,7 @@ public class QueueTest : DbTest
             Assert.NotNull(msg2);
             Assert.Equal(msg.Id, msg2.Id);
             Assert.NotEqual(msg.Receipt, msg2.Receipt);
+            Assert.Equal(1, msg2.RequeueCount);
             AssertMessageLease(lease, msg2.LeaseExpiredAt);
         });
     }
