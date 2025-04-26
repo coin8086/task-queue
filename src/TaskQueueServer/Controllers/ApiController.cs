@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Rz.TaskQueue.Server.Controllers;
 
@@ -6,49 +7,69 @@ namespace Rz.TaskQueue.Server.Controllers;
 [Route("/api/v1")]
 public class ApiController : ControllerBase
 {
-    [HttpPost("queues")]
-    public IActionResult CreateQueue([FromBody] string queueName)
+    private readonly ILogger _logger;
+
+    private readonly IDbContextFactory<PsqlContext> _dbContextFactory;
+
+    public ApiController(ILogger<ApiController> logger, IDbContextFactory<PsqlContext> dbContextFactory)
     {
-        throw new NotImplementedException();
+        _logger = logger;
+        _dbContextFactory = dbContextFactory;
+    }
+
+    [HttpPost("queues")]
+    public async Task<IActionResult> CreateQueueAsync([FromBody] string queueName)
+    {
+        var queue = new Queue(_dbContextFactory, queueName);
+        await queue.CreateAsync();
+        return Ok();
     }
 
     [HttpDelete("queues/{queueName}")]
-    public IActionResult DeleteQueue(string queueName)
+    public async Task<IActionResult> DeleteQueueAsync(string queueName)
     {
-        throw new NotImplementedException();
+        var queue = new Queue(_dbContextFactory, queueName);
+        await queue.DeleteAsync();
+        return Ok();
     }
 
     [HttpPost("queues/{queueName}/in")]
-    public IActionResult PutMessage(string queueName, [FromBody] string message)
+    public async Task<IActionResult> PutMessageAsync(string queueName, [FromBody] string message)
     {
-        throw new NotImplementedException();
+        var queue = new Queue(_dbContextFactory, queueName);
+        await queue.PutMessageAsync(message);
+        return Ok();
     }
 
     //NOTE: It's not a HTTP GET because the function is not idempotent.
     [HttpPost("queues/{queueName}/out")]
-    public IQueueMessage GetMessage(string queueName, [FromBody] int? lease = null)
+    public Task<IQueueMessage?> GetMessageAsync(string queueName, [FromBody] int? lease = null)
     {
-        throw new NotImplementedException();
+        var queue = new Queue(_dbContextFactory, queueName);
+        return queue.GetMessageAsync(lease);
     }
 
     [HttpDelete("queues/{queueName}/messages/{msgId}")]
-    public IActionResult DeleteMessage(string queueName, int msgId, [FromBody] DTO.MessageReceipt receipt)
+    public async Task<IActionResult> DeleteMessageAsync(string queueName, int msgId, [FromBody] DTO.MessageReceipt receipt)
     {
-        receipt.MessageId = msgId;
-        throw new NotImplementedException();
+        var queue = new Queue(_dbContextFactory, queueName);
+        await queue.DeleteMessageAsync(msgId, receipt.Receipt);
+        return Ok();
     }
 
     [HttpPost("queues/{queueName}/messages/{msgId}/return")]
-    public IActionResult ReturnMessage(string queueName, int msgId, [FromBody] DTO.MessageReceipt receipt)
+    public async Task<IActionResult> ReturnMessageAsync(string queueName, int msgId, [FromBody] DTO.MessageReceipt receipt)
     {
-        receipt.MessageId = msgId;
-        throw new NotImplementedException();
+        var queue = new Queue(_dbContextFactory, queueName);
+        await queue.ReturnMessageAsync(msgId, receipt.Receipt);
+        return Ok();
     }
 
     [HttpPost("queues/{queueName}/messages/{msgId}/lease")]
-    public IActionResult ExtendMessageLease(string queueName, int msgId, [FromBody] DTO.MessageLease lease)
+    public async Task<IActionResult> ExtendMessageLeaseAsync(string queueName, int msgId, [FromBody] DTO.MessageLease lease)
     {
-        lease.MessageId = msgId;
-        throw new NotImplementedException();
+        var queue = new Queue(_dbContextFactory, queueName);
+        await queue.ExtendMessageLeaseAsync(msgId, lease.Receipt, lease.Lease);
+        return Ok();
     }
 }

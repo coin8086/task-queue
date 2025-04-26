@@ -1,6 +1,11 @@
 @TaskQueueServer_HostAddress = http://localhost:5215
 
-GET {{TaskQueueServer_HostAddress}}/weatherforecast/
-Accept: application/json
+POST {{TaskQueueServer_HostAddress}}/api/v1/queues/abc/in
+Content-Type: application/json
+
+"Hello, TaskQueue!"
 
 ###
+
+POST {{TaskQueueServer_HostAddress}}/api/v1/queues/abc/out
+Accept: application/json
