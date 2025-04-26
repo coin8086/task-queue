@@ -1,5 +1,10 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace Rz.TaskQueue.Models;
 
+[Index(nameof(Queue))]
+[Index(nameof(CreatedAt))]
+[Index(nameof(LeaseExpiredAt))]
 public class Message
 {
     public int Id { get; set; } = default!;

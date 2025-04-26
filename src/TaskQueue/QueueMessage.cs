@@ -1,19 +1,21 @@
-﻿
+
 namespace Rz.TaskQueue;
 
+//NOTE: This class is very similar to Rz.TaskQueue.Models.Messages, only that
+//the nullability of some properties is different.
 internal class QueueMessage : IQueueMessage
 {
-    public int Id => throw new NotImplementedException();
+    public int Id {  get; set; }
 
-    public string Receipt => throw new NotImplementedException();
+    public string Receipt { get; set; } = default!;
 
-    public string Queue => throw new NotImplementedException();
+    public string Queue { get; set; } = default!;
 
-    public string Content => throw new NotImplementedException();
+    public string Content { get; set; } = default!;
 
-    public int RequeueCount => throw new NotImplementedException();
+    public int RequeueCount { get; set; }
 
-    public DateTimeOffset CreatedAt => throw new NotImplementedException();
+    public DateTimeOffset CreatedAt { get; set; }
 
-    public DateTimeOffset LeaseExpiredAt => throw new NotImplementedException();
+    public DateTimeOffset LeaseExpiredAt { get; set; }
 }

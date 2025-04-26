@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Rz.TaskQueue.Models;
 
 namespace Rz.TaskQueue;
 
@@ -23,36 +24,124 @@ public class Queue : IQueue
 
     public Task CreateAsync()
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 
-    public Task DeleteAsync()
+    public async Task DeleteAsync()
     {
-        throw new NotImplementedException();
+        using var db = _dbContextFactory.CreateDbContext();
+        await db.Messages.Where(msg => msg.Queue == Name).ExecuteDeleteAsync().ConfigureAwait(false);
     }
 
-    public Task PutMessageAsync(string messsage)
+    public async Task PutMessageAsync(string messsage)
     {
-        throw new NotImplementedException();
+        var msg = new Message()
+        {
+            Queue = Name,
+            Content = messsage,
+            RequeueCount = 0,
+            CreatedAt = DateTimeOffset.UtcNow,  //TODO: Configure db model to generate this field automatically?
+        };
+        using var db = _dbContextFactory.CreateDbContext();
+        db.Messages.Add(msg);
+        await db.SaveChangesAsync().ConfigureAwait(false);
     }
 
-    public Task<IQueueMessage?> GetMessageAsync(int? lease = null)
+    public async Task<IQueueMessage?> GetMessageAsync(int? lease = null)
     {
-        throw new NotImplementedException();
+        if (lease != null && lease <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(lease), "The message lease time must be greater than 0.");
+        }
+
+        using var db = _dbContextFactory.CreateDbContext();
+        await using var transaction = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
+
+        var now = DateTimeOffset.UtcNow;
+        //TODO: What should the indexes look like for the query?
+        var msg = await db.Messages.Where(msg => msg.Queue == Name && (msg.LeaseExpiredAt == null || msg.LeaseExpiredAt <= now))
+            .OrderBy(msg => msg.CreatedAt)
+            .FirstOrDefaultAsync().ConfigureAwait(false);
+
+        if (msg == null)
+        {
+            return null;
+        }
+
+        if (msg.LeaseExpiredAt != null)
+        {
+            msg.RequeueCount++;
+        }
+
+        msg.Receipt = Guid.NewGuid().ToString();
+        msg.LeaseExpiredAt = DateTimeOffset.UtcNow + TimeSpan.FromSeconds(lease ?? MessageLease);
+        await db.SaveChangesAsync().ConfigureAwait(false);
+        await transaction.CommitAsync().ConfigureAwait(false);
+
+        return new QueueMessage()
+        {
+            Id = msg.Id,
+            Receipt = msg.Receipt,
+            Queue = Name,
+            Content = msg.Content,
+            RequeueCount = msg.RequeueCount,
+            CreatedAt = msg.CreatedAt,
+            LeaseExpiredAt = msg.LeaseExpiredAt.Value,
+        };
     }
 
-    public Task ExtendMessageLeaseAsync(int messageId, string receipt, int? lease = null)
+    public async Task ExtendMessageLeaseAsync(int messageId, string receipt, int? lease = null)
     {
-        throw new NotImplementedException();
+        //TODO: Use one statement of SQL update instead of two statements of read and save within a transaction?
+        using var db = _dbContextFactory.CreateDbContext();
+        await using var transaction = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
+
+        var now = DateTimeOffset.UtcNow;
+        var msg = await db.Messages.Where(msg => msg.Id == messageId && msg.Receipt == receipt && msg.Queue == Name && msg.LeaseExpiredAt > now)
+            .FirstOrDefaultAsync().ConfigureAwait(false);
+
+        if (msg == null)
+        {
+            var error = "The message may have been deleted, or have been taken back to the queue duo to expired lease.";
+            throw new InvalidOperationException(error);
+        }
+
+        msg.LeaseExpiredAt += TimeSpan.FromSeconds(lease ?? MessageLease);
+        await db.SaveChangesAsync().ConfigureAwait(false);
+        await transaction.CommitAsync().ConfigureAwait(false);
     }
 
-    public Task DeleteMessageAsync(int messageId, string receipt)
+    public async Task DeleteMessageAsync(int messageId, string receipt)
     {
-        throw new NotImplementedException();
+        using var db = _dbContextFactory.CreateDbContext();
+        var now = DateTimeOffset.UtcNow;
+        var count = await db.Messages.Where(msg => msg.Id == messageId && msg.Receipt == receipt && msg.Queue == Name && msg.LeaseExpiredAt > now)
+            .ExecuteDeleteAsync().ConfigureAwait(false);
+
+        if (count == 0)
+        {
+            throw new InvalidOperationException();
+        }
     }
 
-    public Task ReturnMessageAsync(int messageId, string receipt)
+    public async Task ReturnMessageAsync(int messageId, string receipt)
     {
-        throw new NotImplementedException();
+        using var db = _dbContextFactory.CreateDbContext();
+        await using var transaction = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
+
+        var now = DateTimeOffset.UtcNow;
+        var msg = await db.Messages.Where(msg => msg.Id == messageId && msg.Receipt == receipt && msg.Queue == Name && msg.LeaseExpiredAt > now)
+            .FirstOrDefaultAsync().ConfigureAwait(false);
+
+        if (msg == null)
+        {
+            throw new InvalidOperationException();
+        }
+
+        msg.Receipt = null;
+        msg.LeaseExpiredAt = null;
+        msg.RequeueCount++;
+        await db.SaveChangesAsync().ConfigureAwait(false);
+        await transaction.CommitAsync().ConfigureAwait(false);
     }
 }
