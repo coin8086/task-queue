@@ -101,8 +101,7 @@ public class Queue : IQueue
 
         if (count != 1)
         {
-            var error = "The message may have been deleted, or have been taken back to the queue duo to expired lease.";
-            throw new InvalidOperationException(error);
+            throw new InvalidOperationException();
         }
     }
 
