@@ -1,0 +1,4 @@
+{
+  "PgConnectionString": "Host=localhost;Port=5432;Database=task-queue-test;Username=postgres;Password=abc123",
+  "PgVersion": "17.2"
+}

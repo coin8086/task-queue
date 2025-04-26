@@ -1,16 +1,20 @@
 namespace Rz.TaskQueue.Test;
 
-public class QueueTest
+public class QueueTest : DbTest
 {
     private const int DefaultMessageLease = 60;
 
     private const string Letters = "abcdefghijklmnopqrstuvwxyz0123456789";
 
+    public QueueTest(TestDatabaseFixture fixture) : base(fixture)
+    {
+    }
+
     private static string RandomQueueName => $"queue_{new string(Random.Shared.GetItems<char>(Letters, 6))}";
 
     private static async Task TestQueueAsync(Func<IQueue, Task> test)
     {
-        var dbContextFactory = new PsqlContextFactory("connection string");
+        var dbContextFactory = TestDatabaseFixture.CreateContextFactory();
         IQueue queue = new Queue(dbContextFactory, RandomQueueName, DefaultMessageLease);
         await queue.CreateAsync();
         try
@@ -32,7 +36,7 @@ public class QueueTest
     [Fact]
     public async Task TestCreateAndDeleteQueue()
     {
-        var dbContextFactory = new PsqlContextFactory("connection string");
+        var dbContextFactory = TestDatabaseFixture.CreateContextFactory();
         IQueue queue = new Queue(dbContextFactory, RandomQueueName, DefaultMessageLease);
 
         await queue.CreateAsync();

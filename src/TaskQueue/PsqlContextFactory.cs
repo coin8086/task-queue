@@ -1,16 +1,31 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace Rz.TaskQueue;
 
 public class PsqlContextFactory : IDbContextFactory<PsqlContext>
 {
-    public PsqlContextFactory(string pgConnectionString, string? pgVersion = null)
+    private readonly string _dbConnectionString;
+
+    private readonly Version? _dbVersion;
+
+    private readonly Action<DbContextOptionsBuilder<PsqlContext>>? _configure;
+
+    public PsqlContextFactory(string pgConnectionString, string? pgVersion = null,
+        Action<DbContextOptionsBuilder<PsqlContext>>? configure = null)
     {
-        throw new NotImplementedException();
+        _dbConnectionString = pgConnectionString;
+        if (pgVersion != null)
+        {
+            _dbVersion = new Version(pgVersion);
+        }
+        _configure = configure;
     }
 
     public PsqlContext CreateDbContext()
     {
-        throw new NotImplementedException();
+        var optionsBuilder = new DbContextOptionsBuilder<PsqlContext>()
+            .UseNpgsql(_dbConnectionString, options => options.SetPostgresVersion(_dbVersion));
+        _configure?.Invoke(optionsBuilder);
+        return new PsqlContext(optionsBuilder.Options);
     }
 }
