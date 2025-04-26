@@ -92,23 +92,18 @@ public class Queue : IQueue
 
     public async Task ExtendMessageLeaseAsync(int messageId, string receipt, int? lease = null)
     {
-        //TODO: Use one statement of SQL update instead of two statements of read and save within a transaction?
         using var db = _dbContextFactory.CreateDbContext();
-        await using var transaction = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
-
         var now = DateTimeOffset.UtcNow;
-        var msg = await db.Messages.Where(msg => msg.Id == messageId && msg.Receipt == receipt && msg.Queue == Name && msg.LeaseExpiredAt > now)
-            .FirstOrDefaultAsync().ConfigureAwait(false);
+        var count = await db.Messages.Where(msg => msg.Id == messageId && msg.Receipt == receipt && msg.Queue == Name && msg.LeaseExpiredAt > now)
+            .ExecuteUpdateAsync(setters =>
+                setters.SetProperty(msg => msg.LeaseExpiredAt, msg => msg.LeaseExpiredAt + TimeSpan.FromSeconds(lease ?? MessageLease))
+            ).ConfigureAwait(false);
 
-        if (msg == null)
+        if (count != 1)
         {
             var error = "The message may have been deleted, or have been taken back to the queue duo to expired lease.";
             throw new InvalidOperationException(error);
         }
-
-        msg.LeaseExpiredAt += TimeSpan.FromSeconds(lease ?? MessageLease);
-        await db.SaveChangesAsync().ConfigureAwait(false);
-        await transaction.CommitAsync().ConfigureAwait(false);
     }
 
     public async Task DeleteMessageAsync(int messageId, string receipt)
@@ -118,7 +113,7 @@ public class Queue : IQueue
         var count = await db.Messages.Where(msg => msg.Id == messageId && msg.Receipt == receipt && msg.Queue == Name && msg.LeaseExpiredAt > now)
             .ExecuteDeleteAsync().ConfigureAwait(false);
 
-        if (count == 0)
+        if (count != 1)
         {
             throw new InvalidOperationException();
         }
@@ -127,21 +122,18 @@ public class Queue : IQueue
     public async Task ReturnMessageAsync(int messageId, string receipt)
     {
         using var db = _dbContextFactory.CreateDbContext();
-        await using var transaction = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
-
         var now = DateTimeOffset.UtcNow;
-        var msg = await db.Messages.Where(msg => msg.Id == messageId && msg.Receipt == receipt && msg.Queue == Name && msg.LeaseExpiredAt > now)
-            .FirstOrDefaultAsync().ConfigureAwait(false);
+        var count = await db.Messages.Where(msg => msg.Id == messageId && msg.Receipt == receipt && msg.Queue == Name && msg.LeaseExpiredAt > now)
+            .ExecuteUpdateAsync(setters =>
+                setters
+                    .SetProperty(msg => msg.Receipt, msg => null)
+                    .SetProperty(msg => msg.LeaseExpiredAt, msg => null)
+                    .SetProperty(msg => msg.RequeueCount, msg => msg.RequeueCount + 1)
+            ).ConfigureAwait(false);
 
-        if (msg == null)
+        if (count != 1)
         {
             throw new InvalidOperationException();
         }
-
-        msg.Receipt = null;
-        msg.LeaseExpiredAt = null;
-        msg.RequeueCount++;
-        await db.SaveChangesAsync().ConfigureAwait(false);
-        await transaction.CommitAsync().ConfigureAwait(false);
     }
 }
