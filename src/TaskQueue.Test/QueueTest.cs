@@ -1,3 +1,5 @@
+using Xunit.Abstractions;
+
 namespace Rz.TaskQueue.Test;
 
 public class QueueTest : DbTest
@@ -6,16 +8,15 @@ public class QueueTest : DbTest
 
     private const string Letters = "abcdefghijklmnopqrstuvwxyz0123456789";
 
-    public QueueTest(TestDatabaseFixture fixture) : base(fixture)
+    public QueueTest(ITestOutputHelper testout, TestDatabaseFixture fixture) : base(testout, fixture)
     {
     }
 
     private static string RandomQueueName => $"queue_{new string(Random.Shared.GetItems<char>(Letters, 6))}";
 
-    private static async Task TestQueueAsync(Func<IQueue, Task> test)
+    private async Task TestQueueAsync(Func<IQueue, Task> test)
     {
-        var dbContextFactory = TestDatabaseFixture.CreateContextFactory();
-        IQueue queue = new Queue(dbContextFactory, RandomQueueName, DefaultMessageLease);
+        IQueue queue = new Queue(DbContextFactory, RandomQueueName, DefaultMessageLease);
         await queue.CreateAsync();
         try
         {
@@ -36,8 +37,7 @@ public class QueueTest : DbTest
     [Fact]
     public async Task TestCreateAndDeleteQueue()
     {
-        var dbContextFactory = TestDatabaseFixture.CreateContextFactory();
-        IQueue queue = new Queue(dbContextFactory, RandomQueueName, DefaultMessageLease);
+        IQueue queue = new Queue(DbContextFactory, RandomQueueName, DefaultMessageLease);
 
         await queue.CreateAsync();
         try

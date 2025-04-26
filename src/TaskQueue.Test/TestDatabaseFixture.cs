@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace Rz.TaskQueue.Test;
 
@@ -21,10 +21,9 @@ public class TestDatabaseFixture
         return CreateContextFactory().CreateDbContext();
     }
 
-    public static PsqlContextFactory CreateContextFactory()
+    public static PsqlContextFactory CreateContextFactory(Action<DbContextOptionsBuilder<PsqlContext>>? configure = null)
     {
-        return new PsqlContextFactory(TestOptions.Instance.PgConnectionString, TestOptions.Instance.PgVersion,
-            optionsBuilder => optionsBuilder.LogTo(Console.Error.WriteLine, LogLevel.Information));
+        return new PsqlContextFactory(TestOptions.Instance.PgConnectionString, TestOptions.Instance.PgVersion, configure);
     }
 }
 
