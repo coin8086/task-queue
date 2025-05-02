@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskQueue.Test", "TaskQueue
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskQueueServer", "TaskQueueServer\TaskQueueServer.csproj", "{AEDF11B4-8F64-464B-A57B-C32BFD91B39F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskQueueServer.E2E", "TaskQueueServer.E2E\TaskQueueServer.E2E.csproj", "{15498A49-3346-4419-9F3F-0BB933B3CED7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{AEDF11B4-8F64-464B-A57B-C32BFD91B39F}.Release|x64.Build.0 = Release|Any CPU
 		{AEDF11B4-8F64-464B-A57B-C32BFD91B39F}.Release|x86.ActiveCfg = Release|Any CPU
 		{AEDF11B4-8F64-464B-A57B-C32BFD91B39F}.Release|x86.Build.0 = Release|Any CPU
+		{15498A49-3346-4419-9F3F-0BB933B3CED7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15498A49-3346-4419-9F3F-0BB933B3CED7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15498A49-3346-4419-9F3F-0BB933B3CED7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{15498A49-3346-4419-9F3F-0BB933B3CED7}.Debug|x64.Build.0 = Debug|Any CPU
+		{15498A49-3346-4419-9F3F-0BB933B3CED7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{15498A49-3346-4419-9F3F-0BB933B3CED7}.Debug|x86.Build.0 = Debug|Any CPU
+		{15498A49-3346-4419-9F3F-0BB933B3CED7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15498A49-3346-4419-9F3F-0BB933B3CED7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{15498A49-3346-4419-9F3F-0BB933B3CED7}.Release|x64.ActiveCfg = Release|Any CPU
+		{15498A49-3346-4419-9F3F-0BB933B3CED7}.Release|x64.Build.0 = Release|Any CPU
+		{15498A49-3346-4419-9F3F-0BB933B3CED7}.Release|x86.ActiveCfg = Release|Any CPU
+		{15498A49-3346-4419-9F3F-0BB933B3CED7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
