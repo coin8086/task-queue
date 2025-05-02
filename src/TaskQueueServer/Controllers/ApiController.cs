@@ -49,24 +49,24 @@ public class ApiController : ControllerBase
         return queue.GetMessageAsync(lease);
     }
 
-    [HttpDelete("queues/{queueName}/messages/{msgId},{receipt}")]
-    public async Task<IActionResult> DeleteMessageAsync(string queueName, int msgId, string receipt)
+    [HttpDelete("queues/{queueName}/messages/{msgId}")]
+    public async Task<IActionResult> DeleteMessageAsync(string queueName, int msgId, [FromQuery] string receipt)
     {
         var queue = new Queue(_dbContextFactory, queueName);
         await queue.DeleteMessageAsync(msgId, receipt);
         return NoContent();
     }
 
-    [HttpPost("queues/{queueName}/messages/{msgId},{receipt}/return")]
-    public async Task<IActionResult> ReturnMessageAsync(string queueName, int msgId, string receipt)
+    [HttpPost("queues/{queueName}/messages/{msgId}/return")]
+    public async Task<IActionResult> ReturnMessageAsync(string queueName, int msgId, [FromQuery] string receipt)
     {
         var queue = new Queue(_dbContextFactory, queueName);
         await queue.ReturnMessageAsync(msgId, receipt);
         return NoContent();
     }
 
-    [HttpPost("queues/{queueName}/messages/{msgId},{receipt}/lease")]
-    public async Task<IActionResult> ExtendMessageLeaseAsync(string queueName, int msgId, string receipt, [FromBody] int lease)
+    [HttpPost("queues/{queueName}/messages/{msgId}/lease")]
+    public async Task<IActionResult> ExtendMessageLeaseAsync(string queueName, int msgId, [FromQuery] string receipt, [FromBody] int lease)
     {
         var queue = new Queue(_dbContextFactory, queueName);
         await queue.ExtendMessageLeaseAsync(msgId, receipt, lease);

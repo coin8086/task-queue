@@ -92,17 +92,17 @@ where EndPoint is in the form "http://host:port" or "https://host:port".
                 //...
 
                 //Extend the message lease when in need
-                var response = await client.PostAsJsonAsync($"queues/{queue}/messages/{msg.Id},{msg.Receipt}/lease", 2);
+                var response = await client.PostAsJsonAsync($"queues/{queue}/messages/{msg.Id}/lease?receipt={msg.Receipt}", 2);
                 response.EnsureSuccessStatusCode();
 
                 //Delete message from queue in the end
-                response = await client.DeleteAsync($"queues/{queue}/messages/{msg.Id},{msg.Receipt}");
+                response = await client.DeleteAsync($"queues/{queue}/messages/{msg.Id}?receipt={msg.Receipt}");
                 response.EnsureSuccessStatusCode();
             }
             catch // Catch some application exception
             {
                 //Return message to queue if it cannot be handled.
-                await client.PostAsync($"queues/{queue}/messages/{msg.Id},{msg.Receipt}/return", null);
+                await client.PostAsync($"queues/{queue}/messages/{msg.Id}/return?receipt={msg.Receipt}", null);
             }
         });
 
