@@ -1,5 +1,16 @@
 @TaskQueueServer_HostAddress = http://localhost:5215
 
+POST {{TaskQueueServer_HostAddress}}/api/v1/queues
+Content-Type: application/json
+
+"q1"
+
+###
+
+DELETE {{TaskQueueServer_HostAddress}}/api/v1/queues/q1
+
+###
+
 POST {{TaskQueueServer_HostAddress}}/api/v1/queues/q1/in
 Content-Type: application/json
 
