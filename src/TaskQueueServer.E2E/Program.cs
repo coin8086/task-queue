@@ -56,19 +56,19 @@ where EndPoint is in the form "http://host:port" or "https://host:port".
         var queue = "q1";
 
         {
-            Console.WriteLine($"Delete queue {queue}.");
+            Console.WriteLine($"[{DateTimeOffset.UtcNow:o}] Delete queue {queue}.");
             var response = await client.DeleteAsync($"queues/{queue}");
             response.EnsureSuccessStatusCode();
         }
 
         {
-            Console.WriteLine($"Create queue {queue}.");
+            Console.WriteLine($"[{DateTimeOffset.UtcNow:o}] Create queue {queue}.");
             var response = await client.PostAsJsonAsync("queues", queue);
             response.EnsureSuccessStatusCode();
         }
 
         {
-            Console.WriteLine("Put messages in queue.");
+            Console.WriteLine($"[{DateTimeOffset.UtcNow:o}] Put messages in queue.");
             var messages = new string[] { "m1", "m2", "m3" };
             foreach (var message in messages)
             {
@@ -80,7 +80,7 @@ where EndPoint is in the form "http://host:port" or "https://host:port".
         await GetMessagesFromQueue(client, queue);
 
         {
-            Console.WriteLine("Wait for lease expiration.");
+            Console.WriteLine($"[{DateTimeOffset.UtcNow:o}] Wait for lease expiration.");
             await Task.Delay(3 * 1000);
         }
 
@@ -112,7 +112,7 @@ where EndPoint is in the form "http://host:port" or "https://host:port".
 
     static async Task GetMessagesFromQueue(HttpClient client, string queue, Func<QueueMessage, Task>? messageHandler = null)
     {
-        Console.WriteLine("Get messages from queue.");
+        Console.WriteLine($"[{DateTimeOffset.UtcNow:o}] Get messages from queue.");
         while (true)
         {
             var response = await client.PostAsJsonAsync($"queues/{queue}/out", 2);
