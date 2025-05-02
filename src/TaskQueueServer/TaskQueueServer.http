@@ -1,11 +1,23 @@
 @TaskQueueServer_HostAddress = http://localhost:5215
 
-POST {{TaskQueueServer_HostAddress}}/api/v1/queues/abc/in
+POST {{TaskQueueServer_HostAddress}}/api/v1/queues/q1/in
 Content-Type: application/json
 
-"Hello, TaskQueue!"
+"Hello, Q1!"
 
 ###
 
-POST {{TaskQueueServer_HostAddress}}/api/v1/queues/abc/out
+POST {{TaskQueueServer_HostAddress}}/api/v1/queues/q2/in
+Content-Type: application/json
+
+"Hello, Q2!"
+
+###
+
+POST {{TaskQueueServer_HostAddress}}/api/v1/queues/q1/out
+Accept: application/json
+
+###
+
+POST {{TaskQueueServer_HostAddress}}/api/v1/queues/q2/out
 Accept: application/json
