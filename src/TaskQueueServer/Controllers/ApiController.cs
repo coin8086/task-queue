@@ -22,7 +22,7 @@ public class ApiController : ControllerBase
     {
         var queue = new Queue(_dbContextFactory, queueName);
         await queue.CreateAsync();
-        return Ok();
+        return NoContent();
     }
 
     [HttpDelete("queues/{queueName}")]
@@ -30,7 +30,7 @@ public class ApiController : ControllerBase
     {
         var queue = new Queue(_dbContextFactory, queueName);
         await queue.DeleteAsync();
-        return Ok();
+        return NoContent();
     }
 
     [HttpPost("queues/{queueName}/in")]
@@ -38,7 +38,7 @@ public class ApiController : ControllerBase
     {
         var queue = new Queue(_dbContextFactory, queueName);
         await queue.PutMessageAsync(message);
-        return Ok();
+        return NoContent();
     }
 
     //NOTE: It's not a HTTP GET because the function is not idempotent.
@@ -49,27 +49,27 @@ public class ApiController : ControllerBase
         return queue.GetMessageAsync(lease);
     }
 
-    [HttpDelete("queues/{queueName}/messages/{msgId}")]
-    public async Task<IActionResult> DeleteMessageAsync(string queueName, int msgId, [FromBody] DTO.MessageReceipt receipt)
+    [HttpDelete("queues/{queueName}/messages/{msgId},{receipt}")]
+    public async Task<IActionResult> DeleteMessageAsync(string queueName, int msgId, string receipt)
     {
         var queue = new Queue(_dbContextFactory, queueName);
-        await queue.DeleteMessageAsync(msgId, receipt.Receipt);
-        return Ok();
+        await queue.DeleteMessageAsync(msgId, receipt);
+        return NoContent();
     }
 
-    [HttpPost("queues/{queueName}/messages/{msgId}/return")]
-    public async Task<IActionResult> ReturnMessageAsync(string queueName, int msgId, [FromBody] DTO.MessageReceipt receipt)
+    [HttpPost("queues/{queueName}/messages/{msgId},{receipt}/return")]
+    public async Task<IActionResult> ReturnMessageAsync(string queueName, int msgId, string receipt)
     {
         var queue = new Queue(_dbContextFactory, queueName);
-        await queue.ReturnMessageAsync(msgId, receipt.Receipt);
-        return Ok();
+        await queue.ReturnMessageAsync(msgId, receipt);
+        return NoContent();
     }
 
-    [HttpPost("queues/{queueName}/messages/{msgId}/lease")]
-    public async Task<IActionResult> ExtendMessageLeaseAsync(string queueName, int msgId, [FromBody] DTO.MessageLease lease)
+    [HttpPost("queues/{queueName}/messages/{msgId},{receipt}/lease")]
+    public async Task<IActionResult> ExtendMessageLeaseAsync(string queueName, int msgId, string receipt, [FromBody] int lease)
     {
         var queue = new Queue(_dbContextFactory, queueName);
-        await queue.ExtendMessageLeaseAsync(msgId, lease.Receipt, lease.Lease);
-        return Ok();
+        await queue.ExtendMessageLeaseAsync(msgId, receipt, lease);
+        return NoContent();
     }
 }
