@@ -101,8 +101,7 @@ public class Queue : IQueue
 
         if (count != 1)
         {
-            //TODO: Throw a custom exception.
-            throw new InvalidOperationException();
+            throw new InvalidQueueOperation();
         }
     }
 
@@ -115,8 +114,7 @@ public class Queue : IQueue
 
         if (count != 1)
         {
-            //TODO: Throw a custom exception.
-            throw new InvalidOperationException();
+            throw new InvalidQueueOperation();
         }
     }
 
@@ -134,8 +132,7 @@ public class Queue : IQueue
 
         if (count != 1)
         {
-            //TODO: Throw a custom exception.
-            throw new InvalidOperationException();
+            throw new InvalidQueueOperation();
         }
     }
 }

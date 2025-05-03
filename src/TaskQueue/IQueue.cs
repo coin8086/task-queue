@@ -1,5 +1,9 @@
 namespace Rz.TaskQueue;
 
+public class InvalidQueueOperation : Exception
+{
+}
+
 public interface IQueue
 {
     //Queue name
@@ -27,11 +31,14 @@ public interface IQueue
 
     //Extend the message lease time in seconds.
     //When lease is null, the default lease on queue will be used.
+    //Throw InvalidQueueOperation when lease is expired or messageId is invalid.
     Task ExtendMessageLeaseAsync(int messageId, string receipt, int? lease = null);
 
     //Delete the message from the queue when it has been processed.
+    //Throw InvalidQueueOperation when lease is expired or messageId is invalid.
     Task DeleteMessageAsync(int messageId, string receipt);
 
     //Return the message back to the queue when it cannot be processed.
+    //Throw InvalidQueueOperation when lease is expired or messageId is invalid.
     Task ReturnMessageAsync(int messageId, string receipt);
 }

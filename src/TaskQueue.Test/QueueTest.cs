@@ -58,17 +58,17 @@ public class QueueTest : DbTest
             Assert.Null(msg2);
 
             //And any operations on the retrieved msg should fail.
-            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            await Assert.ThrowsAsync<InvalidQueueOperation>(() =>
             {
                 return queue.ExtendMessageLeaseAsync(msg.Id, msg.Receipt, queue.MessageLease);
             });
 
-            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            await Assert.ThrowsAsync<InvalidQueueOperation>(() =>
             {
                 return queue.ReturnMessageAsync(msg.Id, msg.Receipt);
             });
 
-            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            await Assert.ThrowsAsync<InvalidQueueOperation>(() =>
             {
                 return queue.DeleteMessageAsync(msg.Id, msg.Receipt);
             });
@@ -228,7 +228,7 @@ public class QueueTest : DbTest
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The lease of msg is expired.
-            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            await Assert.ThrowsAsync<InvalidQueueOperation>(() =>
             {
                 return queue.ExtendMessageLeaseAsync(msg.Id, msg.Receipt, lease);
             });
@@ -308,7 +308,7 @@ public class QueueTest : DbTest
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The lease of msg is expired.
-            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            await Assert.ThrowsAsync<InvalidQueueOperation>(() =>
             {
                 return queue.DeleteMessageAsync(msg.Id, msg.Receipt);
             });
@@ -389,7 +389,7 @@ public class QueueTest : DbTest
             await Task.Delay((int)(lease / 2.0 * 1000));
 
             //The lease of msg is expired.
-            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            await Assert.ThrowsAsync<InvalidQueueOperation>(() =>
             {
                 return queue.ReturnMessageAsync(msg.Id, msg.Receipt);
             });
