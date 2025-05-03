@@ -33,6 +33,13 @@ public class ApiController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("queues/{queueName}/stat")]
+    public async Task<IQueueStat> GetQueueStatAsync(string queueName)
+    {
+        var queue = new Queue(_dbContextFactory, queueName);
+        return await queue.GetStatAsync();
+    }
+
     [HttpPost("queues/{queueName}/in")]
     public async Task<IActionResult> PutMessageAsync(string queueName, [FromBody] string message)
     {

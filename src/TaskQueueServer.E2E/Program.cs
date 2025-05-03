@@ -78,6 +78,8 @@ where EndPoint is in the form "http://host:port" or "https://host:port".
             }
         }
 
+        await GetQueueStat(client, queue);
+
         QueueMessage? qmsg = null;
         await GetMessagesFromQueue(client, queue, (msg) =>
         {
@@ -86,10 +88,14 @@ where EndPoint is in the form "http://host:port" or "https://host:port".
         });
         Trace.Assert(qmsg != null);
 
+        await GetQueueStat(client, queue);
+
         {
             Console.WriteLine($"[{DateTimeOffset.UtcNow:o}] Wait for lease expiration.");
             await Task.Delay(3 * 1000);
         }
+
+        await GetQueueStat(client, queue);
 
         {
             Console.WriteLine($"[{DateTimeOffset.UtcNow:o}] Operations on a message that has an expired lease should fail.");
@@ -123,6 +129,8 @@ where EndPoint is in the form "http://host:port" or "https://host:port".
 
         //There should be no message in queue now.
         await GetMessagesFromQueue(client, queue);
+
+        await GetQueueStat(client, queue);
     }
 
     static async Task GetMessagesFromQueue(HttpClient client, string queue, Func<QueueMessage, Task>? messageHandler = null)
@@ -147,5 +155,13 @@ where EndPoint is in the form "http://host:port" or "https://host:port".
                 await messageHandler(message!);
             }
         }
+    }
+
+    static async Task GetQueueStat(HttpClient client, string queue)
+    {
+        Console.WriteLine($"[{DateTimeOffset.UtcNow:o}] Get queue stat.");
+        var stat = await client.GetFromJsonAsync<QueueStat>($"queues/{queue}/stat");
+        Trace.Assert(stat != null);
+        Console.WriteLine(stat);
     }
 }

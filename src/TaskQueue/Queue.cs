@@ -135,4 +135,17 @@ public class Queue : IQueue
             throw new InvalidQueueOperation();
         }
     }
+
+    public async Task<IQueueStat> GetStatAsync()
+    {
+        using var db = _dbContextFactory.CreateDbContext();
+        //TODO: Is this correct/proper to make two queries in a transaction?
+        await using var transaction = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
+        var now = DateTimeOffset.UtcNow;
+        var total = await db.Messages.Where(msg => msg.Queue == Name).CountAsync();
+        var available = await db.Messages.Where(msg => msg.Queue == Name && (msg.LeaseExpiredAt == null || msg.LeaseExpiredAt <= now)).CountAsync();
+        await transaction.CommitAsync().ConfigureAwait(false);
+
+        return new QueueStat { Queue = Name, MessageTotal = total, MessageAvailable = available };
+    }
 }

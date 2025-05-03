@@ -18,6 +18,8 @@ public interface IQueue
     //Delete the queue only if it exists.
     Task DeleteAsync();
 
+    Task<IQueueStat> GetStatAsync();
+
     //Put a message at the end of the queue.
     Task PutMessageAsync(string messsage);
 

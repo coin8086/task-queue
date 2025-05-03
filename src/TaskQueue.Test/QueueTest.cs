@@ -403,4 +403,43 @@ public class QueueTest : DbTest
             AssertMessageLease(lease, msg2.LeaseExpiredAt);
         });
     }
+
+    [Fact]
+    public async Task TestGetQueueStat()
+    {
+        await TestQueueAsync(async (queue) =>
+        {
+            //Initially, queue is empty.
+            var stat = await queue.GetStatAsync();
+            Assert.NotNull(stat);
+            Assert.Equal(queue.Name, stat.Queue);
+            Assert.Equal(0, stat.MessageTotal);
+            Assert.Equal(0, stat.MessageAvailable);
+
+            //Add some messages.
+            var messages = new string[] { "1", "2", "3" };
+            foreach (var message in messages)
+            {
+                await queue.PutMessageAsync(message);
+            }
+
+            //Get stat
+            stat = await queue.GetStatAsync();
+            Assert.NotNull(stat);
+            Assert.Equal(queue.Name, stat.Queue);
+            Assert.Equal(messages.Length, stat.MessageTotal);
+            Assert.Equal(messages.Length, stat.MessageAvailable);
+
+            //Get a message from queue
+            var msg = await queue.GetMessageAsync();
+            Assert.NotNull(msg);
+
+            //Get stat again, number of available should -1
+            stat = await queue.GetStatAsync();
+            Assert.NotNull(stat);
+            Assert.Equal(queue.Name, stat.Queue);
+            Assert.Equal(messages.Length, stat.MessageTotal);
+            Assert.Equal(messages.Length - 1, stat.MessageAvailable);
+        });
+    }
 }
