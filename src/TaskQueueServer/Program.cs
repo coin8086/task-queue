@@ -22,6 +22,7 @@ public class Program
             dbContext.Database.EnsureCreated();
         }
 
+        app.UseMiddleware<ErrorHandler>();
         app.MapControllers();
         app.Run();
     }
