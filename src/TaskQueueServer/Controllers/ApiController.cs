@@ -87,7 +87,7 @@ public class ApiController : ControllerBase
     }
 
     [HttpPost("queues/{queueName}/messages/{msgId}/lease")]
-    public async Task<IActionResult> ExtendMessageLeaseAsync(string queueName, int msgId, [FromQuery] string receipt, [FromBody] int lease)
+    public async Task<IActionResult> ExtendMessageLeaseAsync(string queueName, int msgId, [FromQuery] string receipt, [FromBody] int? lease)
     {
         var queue = new Queue(_dbContextFactory, queueName);
         try
