@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Net.Http.Json;
 
 namespace TaskQueueServer.E2E;
@@ -77,13 +78,27 @@ where EndPoint is in the form "http://host:port" or "https://host:port".
             }
         }
 
-        await GetMessagesFromQueue(client, queue);
+        QueueMessage? qmsg = null;
+        await GetMessagesFromQueue(client, queue, (msg) =>
+        {
+            qmsg = msg;
+            return Task.CompletedTask;
+        });
+        Trace.Assert(qmsg != null);
 
         {
             Console.WriteLine($"[{DateTimeOffset.UtcNow:o}] Wait for lease expiration.");
             await Task.Delay(3 * 1000);
         }
 
+        {
+            Console.WriteLine($"[{DateTimeOffset.UtcNow:o}] Operations on a message that has an expired lease should fail.");
+            var response = await client.PostAsJsonAsync($"queues/{queue}/messages/{qmsg.Id}/lease?receipt={qmsg.Receipt}", 2);
+            Console.WriteLine($"Status code: {response.StatusCode}");
+            Trace.Assert(response.StatusCode == System.Net.HttpStatusCode.NotFound);
+        }
+
+        //Now the messages are available in queue again.
         await GetMessagesFromQueue(client, queue, async (msg) =>
         {
             try
