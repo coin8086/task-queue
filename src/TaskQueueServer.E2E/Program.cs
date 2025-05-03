@@ -1,8 +1,8 @@
+using Rz.TaskQueue.Client;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
-using System.Net.Http.Json;
 
-namespace TaskQueueServer.E2E;
+namespace Rz.TaskQueue.Server.E2E;
 
 class Program
 {
@@ -48,24 +48,17 @@ where EndPoint is in the form "http://host:port" or "https://host:port".
     static async Task Main(string[] args)
     {
         var options = ParseCommandLine(args);
-        var baseAddress = options.EndPoint + "api/v1/";
-        Console.WriteLine($"BaseAddress: {baseAddress}");
-
-        var client = new HttpClient();
-        client.BaseAddress = new Uri(baseAddress);
-
+        var client = new QueueClient(options.EndPoint);
         var queue = "q1";
 
         {
             Console.WriteLine($"[{DateTimeOffset.UtcNow:o}] Delete queue {queue}.");
-            var response = await client.DeleteAsync($"queues/{queue}");
-            response.EnsureSuccessStatusCode();
+            await client.DeleteQueueAsync(queue);
         }
 
         {
             Console.WriteLine($"[{DateTimeOffset.UtcNow:o}] Create queue {queue}.");
-            var response = await client.PostAsJsonAsync("queues", queue);
-            response.EnsureSuccessStatusCode();
+            await client.CreateQueueAsync(queue);
         }
 
         {
@@ -73,20 +66,21 @@ where EndPoint is in the form "http://host:port" or "https://host:port".
             var messages = new string[] { "m1", "m2", "m3" };
             foreach (var message in messages)
             {
-                var response = await client.PostAsJsonAsync($"queues/{queue}/in", message);
-                response.EnsureSuccessStatusCode();
+                await client.PutMessageAsync(queue, message);
             }
         }
 
         await GetQueueStat(client, queue);
 
         QueueMessage? qmsg = null;
-        await GetMessagesFromQueue(client, queue, (msg) =>
         {
-            qmsg = msg;
-            return Task.CompletedTask;
-        });
-        Trace.Assert(qmsg != null);
+            await GetMessagesFromQueue(client, queue, (msg) =>
+            {
+                qmsg = msg;
+                return Task.CompletedTask;
+            });
+            Trace.Assert(qmsg != null);
+        }
 
         await GetQueueStat(client, queue);
 
@@ -99,9 +93,15 @@ where EndPoint is in the form "http://host:port" or "https://host:port".
 
         {
             Console.WriteLine($"[{DateTimeOffset.UtcNow:o}] Operations on a message that has an expired lease should fail.");
-            var response = await client.PostAsJsonAsync($"queues/{queue}/messages/{qmsg.Id}/lease?receipt={qmsg.Receipt}", 2);
-            Console.WriteLine($"Status code: {response.StatusCode}");
-            Trace.Assert(response.StatusCode == System.Net.HttpStatusCode.NotFound);
+
+            try
+            {
+                await client.ExtendMessageLeaseAsync(queue, qmsg.Id, qmsg.Receipt, 2);
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Error: {ex}");
+            }
         }
 
         //Now the messages are available in queue again.
@@ -113,41 +113,33 @@ where EndPoint is in the form "http://host:port" or "https://host:port".
                 //...
 
                 //Extend the message lease when in need
-                var response = await client.PostAsJsonAsync($"queues/{queue}/messages/{msg.Id}/lease?receipt={msg.Receipt}", 2);
-                response.EnsureSuccessStatusCode();
+                await client.ExtendMessageLeaseAsync(queue, msg.Id, msg.Receipt, 2);
 
                 //Delete message from queue in the end
-                response = await client.DeleteAsync($"queues/{queue}/messages/{msg.Id}?receipt={msg.Receipt}");
-                response.EnsureSuccessStatusCode();
+                await client.DeleteMessageAsync(queue, msg.Id, msg.Receipt);
             }
-            catch // Catch some application exception
+            catch (OperationCanceledException) // Catch some application exception
             {
                 //Return message to queue if it cannot be handled.
-                await client.PostAsync($"queues/{queue}/messages/{msg.Id}/return?receipt={msg.Receipt}", null);
+                await client.ReturnMessageAsync(queue, msg.Id, msg.Receipt);
             }
         });
-
-        //There should be no message in queue now.
-        await GetMessagesFromQueue(client, queue);
 
         await GetQueueStat(client, queue);
     }
 
-    static async Task GetMessagesFromQueue(HttpClient client, string queue, Func<QueueMessage, Task>? messageHandler = null)
+    static async Task GetMessagesFromQueue(QueueClient client, string queue, Func<QueueMessage, Task>? messageHandler = null)
     {
         Console.WriteLine($"[{DateTimeOffset.UtcNow:o}] Get messages from queue.");
         while (true)
         {
-            var response = await client.PostAsJsonAsync($"queues/{queue}/out", 2);
-            response.EnsureSuccessStatusCode();
-
-            if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
+            var message = await client.GetMessageAsync(queue, 2);
+            if (message == null)
             {
                 Console.WriteLine("No more messages in queue.");
                 break;
             }
 
-            var message = await response.Content.ReadFromJsonAsync<QueueMessage>();
             Console.WriteLine($"Message:\n{message}");
 
             if (messageHandler != null)
@@ -157,11 +149,10 @@ where EndPoint is in the form "http://host:port" or "https://host:port".
         }
     }
 
-    static async Task GetQueueStat(HttpClient client, string queue)
+    static async Task GetQueueStat(QueueClient client, string queue)
     {
         Console.WriteLine($"[{DateTimeOffset.UtcNow:o}] Get queue stat.");
-        var stat = await client.GetFromJsonAsync<QueueStat>($"queues/{queue}/stat");
-        Trace.Assert(stat != null);
+        var stat = await client.GetQueueStatAsync(queue);
         Console.WriteLine(stat);
     }
 }

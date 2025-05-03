@@ -1,8 +1,8 @@
 using System.Text.Json;
 
-namespace TaskQueueServer.E2E;
+namespace Rz.TaskQueue.Client;
 
-internal class QueueMessage
+public class QueueMessage
 {
     public int Id { get; set; }
 
@@ -20,6 +20,8 @@ internal class QueueMessage
 
     public override string ToString()
     {
-        return JsonSerializer.Serialize(this, new JsonSerializerOptions() { WriteIndented = true });
+        return JsonSerializer.Serialize(this, ToStringOptions);
     }
+
+    private static JsonSerializerOptions ToStringOptions { get; } = new JsonSerializerOptions() { WriteIndented = true };
 }
