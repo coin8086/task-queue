@@ -118,7 +118,7 @@ public class Worker : BackgroundService
     }
 }
 
-static class ServiceCollectionWorkerServiceExtensions
+static class WorkerIServiceCollectionExtensions
 {
     public static IServiceCollection AddWorkerService(this IServiceCollection services)
     {
