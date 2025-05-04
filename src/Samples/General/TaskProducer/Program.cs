@@ -79,7 +79,7 @@ where EndPoint is in the form "http://host:port" or "https://host:port".
             return -1;
         }
 
-        var client = new QueueClient(options.EndPoint);
+        using var client = new QueueClient(options.EndPoint);
 
         Console.WriteLine($"Create queue {options.Queue}.");
         client.CreateQueueAsync(options.Queue).Wait();

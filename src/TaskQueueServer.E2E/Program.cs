@@ -48,7 +48,7 @@ where EndPoint is in the form "http://host:port" or "https://host:port".
     static async Task Main(string[] args)
     {
         var options = ParseCommandLine(args);
-        var client = new QueueClient(options.EndPoint);
+        using var client = new QueueClient(options.EndPoint);
         var queue = "q1";
 
         {

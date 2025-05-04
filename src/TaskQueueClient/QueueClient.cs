@@ -2,10 +2,11 @@ using System.Net.Http.Json;
 
 namespace Rz.TaskQueue.Client;
 
-public class QueueClient : IQueueClient
+public class QueueClient : IQueueClient, IDisposable
 {
     private readonly HttpClient _client;
 
+    //TODO: Add a constructor with a param of type HttpClient for use in hosted service?
     public QueueClient(string endPoint)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(endPoint, nameof(endPoint));
@@ -88,5 +89,11 @@ public class QueueClient : IQueueClient
     {
         var response = await _client.DeleteAsync($"queues/{queue}/messages/{messageId}?receipt={receipt}", token);
         response.EnsureSuccessStatusCode();
+    }
+
+    public void Dispose()
+    {
+        _client?.Dispose();
+        GC.SuppressFinalize(this);
     }
 }
