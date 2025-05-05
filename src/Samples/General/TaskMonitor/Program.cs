@@ -13,16 +13,14 @@ public class Program
             { "-a", "ProcessWorkerProvider:Arguments" },
         };
 
-        var builder = WebApplication.CreateBuilder(args);
+        var builder = Host.CreateApplicationBuilder(args);
         builder.Configuration.AddCommandLine(args, switchMappings);
-        builder.Services.AddControllers();
         builder.Services.AddMonitor();
         builder.Services.AddQueueClient();
         builder.Services.AddFixedScalePolicy();
         builder.Services.AddProcessWorkerProvider();
 
         var app = builder.Build();
-        app.MapControllers();
         app.Run();
     }
 }
