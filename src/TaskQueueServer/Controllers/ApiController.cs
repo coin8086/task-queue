@@ -38,7 +38,7 @@ public class ApiController : ControllerBase
     [HttpGet("queues/{queueName}/stat")]
     public async Task<IQueueStat> GetQueueStatAsync(string queueName)
     {
-        _logger.LogDebug("Get state for queue '{name}'", queueName);
+        _logger.LogDebug("Get stat of queue '{name}'", queueName);
         var queue = new Queue(_dbContextFactory, queueName);
         return await queue.GetStatAsync();
     }
