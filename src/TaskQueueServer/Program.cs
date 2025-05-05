@@ -6,7 +6,7 @@ public class Program
     {
         var switchMappings = new Dictionary<string, string>()
         {
-            { "-L", "Logging:LogLevel:Default" },
+            { "-L", "Logging:LogLevel:Rz.TaskQueue.Server" },
         };
 
         var builder = WebApplication.CreateBuilder(args);
