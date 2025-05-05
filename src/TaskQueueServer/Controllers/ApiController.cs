@@ -59,7 +59,17 @@ public class ApiController : ControllerBase
     {
         var queue = new Queue(_dbContextFactory, queueName);
         var msg = await queue.GetMessageAsync(lease);
-        _logger.LogDebug("Get message ({id}, {receipt}) from queue '{name}'", msg?.Id, msg?.Receipt, queueName);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            if (msg == null)
+            {
+                _logger.LogDebug("Got no message from queue '{name}'", queueName);
+            }
+            else
+            {
+                _logger.LogDebug("Got message ({id}, {receipt}) from queue '{name}'", msg?.Id, msg?.Receipt, queueName);
+            }
+        }
         return msg;
     }
 
