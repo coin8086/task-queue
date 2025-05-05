@@ -47,6 +47,7 @@ public class Queue : IQueue
         await db.SaveChangesAsync().ConfigureAwait(false);
     }
 
+    //TODO: Add a test for concurrent calls.
     public async Task<IQueueMessage?> GetMessageAsync(int? lease = null)
     {
         if (lease != null && lease <= 0)
@@ -58,11 +59,15 @@ public class Queue : IQueue
         await using var transaction = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
 
         var now = DateTimeOffset.UtcNow;
-        //TODO: What should the indexes look like for the query?
-        var msg = await db.Messages.Where(msg => msg.Queue == Name && (msg.LeaseExpiredAt == null || msg.LeaseExpiredAt <= now))
-            .OrderBy(msg => msg.CreatedAt)
-            .FirstOrDefaultAsync().ConfigureAwait(false);
 
+        //TODO: What should the indexes look like for the query?
+        FormattableString sql = $"""
+        select * from "Messages" where "Queue" = {Name} and ("LeaseExpiredAt" is null or "LeaseExpiredAt" < {now})
+        order by "CreatedAt" asc limit 1
+        for update
+        """;
+
+        var msg = await db.Messages.FromSql(sql).FirstOrDefaultAsync().ConfigureAwait(false);
         if (msg == null)
         {
             return null;
