@@ -4,6 +4,8 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Rz.TaskQueueMonitor</RootNamespace>
+    <AssemblyName>Rz.TaskQueueMonitor</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

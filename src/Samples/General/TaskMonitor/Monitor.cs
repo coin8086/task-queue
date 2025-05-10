@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 using Rz.TaskQueue.Client;
 using System.ComponentModel.DataAnnotations;
 
-namespace TaskMonitor;
+namespace Rz.TaskQueueMonitor;
 
 public class MonitorOptions
 {

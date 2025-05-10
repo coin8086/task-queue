@@ -1,4 +1,4 @@
-namespace TaskMonitor;
+namespace Rz.TaskQueueMonitor;
 
 public class Program
 {
@@ -6,7 +6,7 @@ public class Program
     {
         var switchMappings = new Dictionary<string, string>()
         {
-            { "-L", "Logging:LogLevel:TaskMonitor" },
+            { "-L", "Logging:LogLevel:TaskQueueMonitor" },
             { "-e", "Queue:EndPoint" },
             { "-q", "Monitor:Queue" },
             { "-c", "ProcessWorkerProvider:Command" },

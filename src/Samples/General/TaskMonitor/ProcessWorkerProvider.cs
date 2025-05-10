@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 
-namespace TaskMonitor;
+namespace Rz.TaskQueueMonitor;
 
 public class ProcessWorkerProviderOptions
 {

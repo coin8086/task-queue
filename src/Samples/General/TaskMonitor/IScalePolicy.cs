@@ -1,6 +1,6 @@
 using Rz.TaskQueue.Client;
 
-namespace TaskMonitor;
+namespace Rz.TaskQueueMonitor;
 
 public interface IScalePolicy
 {

@@ -1,4 +1,4 @@
-namespace TaskMonitor;
+namespace Rz.TaskQueueMonitor;
 
 public interface IWorkerProvider
 {
