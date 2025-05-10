@@ -5,8 +5,8 @@
   * Creating containerized workers in k8s
   * More scaling policies
 * Improve TaskQueueServer
-  * Support more concurrent REST API calls (> 100) (may need more connections to PostgreSQL)
   * Support authentication
+  * Support more concurrent REST API calls (> 100) (by server side retry to connect to DB and/or more concurrent connections to DB)
   * [Optionally] Return message Id when putting a message in queue
 * Improve TaskQueueClient
   * Support retry on failure of REST API call
