@@ -1,4 +1,4 @@
-namespace TaskConsumer;
+namespace Rz.TaskQueueWorker;
 
 public class Program
 {

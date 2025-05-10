@@ -2,7 +2,7 @@ using Microsoft.Extensions.Options;
 using Rz.TaskQueue.Client;
 using System.ComponentModel.DataAnnotations;
 
-namespace TaskConsumer;
+namespace Rz.TaskQueueWorker;
 
 public class QueueOptions
 {
